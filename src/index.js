@@ -1,7 +1,7 @@
 export default class Picker {
 	constructor(options){
 		this.options = {
-			itemVal:0
+			itemVal:[]
 		}
 		this.touch = false
 		this.lineHeight = 60
@@ -28,22 +28,30 @@ export default class Picker {
 			<div class="line"></div>
 		</div>`
 		let li = ''
-		this.options.itemDis = this.options.itemDis || this.options.item 
-		this.options.item.forEach((i)=>{
-			li += `<li data-val="${i}">${this.options.itemDis[i]}</li>`
+		this.options.item.forEach((i,idx)=>{
+			this.options.itemDis[idx] = this.options.itemDis[idx] || i//this.options.item[idx]
+			this.options.itemVal[idx] = this.options.itemVal[idx] || 0
+			li += `<ul data-idx="${idx}">`
+			i.forEach((j,jIdx)=>{
+				li += `<li data-val="${j}">${j}</li>`
+			})
+			li += '</ul>'
 		})
-		li = `<ul>${li}</ul>`
 		this.picker.innerHTML = str
 		document.body.appendChild(this.picker)
 		document.querySelector('.picker-content').innerHTML = li
 
-		this.ul = document.querySelector('.picker-content ul')
+		this.ul = document.querySelectorAll('.picker-content ul')
 		this.bindEvent()
-		this.setVal(this.options.itemVal)
+		this.options.itemVal.forEach((i,idx)=>{
+			this.setVal(idx,i)
+		})
 	}
 	bindEvent(){
 		let cont = document.querySelector('.picker-content')
-		cont.addEventListener('touchstart',this,false)
+		;[].slice.call(this.ul).forEach(i=>{
+			i.addEventListener('touchstart',this,false)
+		})
 		document.addEventListener('touchmove',this,false)
 		document.addEventListener('touchend',this,false)
 
@@ -62,6 +70,7 @@ export default class Picker {
 		switch(type){
 			case 'touchstart':
 				this.touch = true
+				this.actvieCol = e.touches[0].target.parentNode.getAttribute('data-idx')
 				this.startY = e.pageY || e.touches[0].pageY
 				break
 			case 'touchmove':
@@ -69,27 +78,30 @@ export default class Picker {
 				this.currentY = e.pageY || e.touches[0].pageY
 				dis = this.currentY - this.startY
 				this.startY = this.currentY
-				this.ul.style.transform = this.ul.style.transform.replace(/(-?\d+)/,m => {		
+				this.ul[this.actvieCol].style.transform = this.ul[this.actvieCol].style.transform.replace(/(-?\d+)/,m => {		
 					return parseInt(+m + dis)
 				})
 				break
 			case 'touchend':
+				if(!this.touch) return
 				this.touch = false
-				this.ul.style.transform = this.ul.style.transform.replace(/(-?\d+)/,m => {		
+				this.ul[this.actvieCol].style.transform = this.ul[this.actvieCol].style.transform.replace(/(-?\d+)/,m => {		
 					let y = Math.round(m / this.lineHeight) * this.lineHeight
-					y = y > this.lineHeight * 2 ? this.lineHeight * 2 : y < this.lineHeight * (3 - this.options.item.length) ? this.lineHeight * (3 - this.options.item.length) : y 
-					this.selectIndex = 2 - y / this.lineHeight
-					this.selectVal = this.options.itemDis[this.selectIndex]
+					y = y > this.lineHeight * 2 ? this.lineHeight * 2 : y < this.lineHeight * (3 - this.options.item[this.actvieCol].length) ? this.lineHeight * (3 - this.options.item[this.actvieCol].length) : y 
+					this.selectIndex[this.actvieCol] = 2 - y / this.lineHeight
+					this.selectVal[this.actvieCol] = this.options.itemDis[this.actvieCol][this.selectIndex[this.actvieCol]]
 					return y
 				})
 				break
 		}
 	}
-	setVal(idx){
+	setVal(col,idx){
 		let y = (2 - idx) * this.lineHeight
-		this.selectIndex = idx
-		this.selectVal = this.options.itemDis[idx]
-		this.ul.style.cssText = `transform:translateY(${y}px)`
+		this.selectIndex[col] = idx
+		this.selectVal[col] = this.options.itemDis[idx][idx]
+		;[].slice.call(this.ul).forEach(i=>{
+			i.style.cssText = `transform:translateY(${y}px)`
+		})
 	}
 	trigger(type){
 		this.events[type] && this.events[type].call(this,{
