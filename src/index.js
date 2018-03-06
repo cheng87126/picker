@@ -33,7 +33,7 @@ export default class Picker {
 			this.options.itemVal[idx] = this.options.itemVal[idx] || 0
 			li += `<ul data-idx="${idx}">`
 			i.forEach((j,jIdx)=>{
-				li += `<li data-val="${j}">${j}</li>`
+				li += `<li data-val="${j}">${this.options.itemDis[idx][jIdx]}</li>`
 			})
 			li += '</ul>'
 		})

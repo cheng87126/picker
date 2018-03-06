@@ -6,9 +6,11 @@
 	z-index: 1314;
 	transition: transform 0.5s;
 	touch-action: none;
+	display: block;
 }
 .picker-box-close{
 	transform: translateY(100%);
+	display: none;
 }
 .picker-box header{
 	display: flex;
